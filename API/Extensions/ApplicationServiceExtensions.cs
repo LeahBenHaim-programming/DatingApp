@@ -11,10 +11,13 @@ namespace API.Extensions
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config)
         {
-            services.AddScoped<ITokenService, TokenService>();//using Interface for easy testing.
+            services.AddScoped<ITokenService, TokenService>();
+            //using Interface for easy testing.
             //scoped- an instance of service live during Http request
             //transient- service destroyed as soon as the function is stopped
             //singelton- all life of application
+
+            services.AddScoped<IUserRepository,UserRepository>();
 
             services.AddDbContext<DataContext>(options =>
             {

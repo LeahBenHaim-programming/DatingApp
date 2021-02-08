@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ReplaySubject, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { User } from '../_models/user';
 
@@ -19,6 +20,12 @@ import { User } from '../_models/user';
 export class AccountService {
 
   baseUrl = 'https://localhost:5001/api/';
+  private currentUserSource = new ReplaySubject<User>(1);
+  //tyupe of observable-
+  currentUser$ = this.currentUserSource.asObservable();
+
+  isLoggedInEvent = new Subject<boolean>();
+
 
   constructor(private http: HttpClient) { }
 
@@ -26,16 +33,34 @@ export class AccountService {
     return this.http.post(this.baseUrl + 'account/login', model).pipe(
       map((response: User) => {
         const user = response;
-        if (response) {
+        if (user) {
           localStorage.setItem("user", JSON.stringify(user));
+          this.currentUserSource.next(user);
+          this.isLoggedInEvent.next(true);
         }
       })
     );
   }
 
-  logout() {
-    localStorage.removeItem("user");
+  register(model: any) {
+    return this.http.post(this.baseUrl + 'account/register', model).pipe(
+      map((user: User) => {
+        if (user) {
+          localStorage.setItem("user", JSON.stringify(user));
+          this.currentUserSource.next(user);
+          this.isLoggedInEvent.next(true);
+        }
+      })
+    );
   }
 
+  setCurrentUser(user:User){
+    this.currentUserSource.next(user);
+  }
+  logout() {
+    localStorage.removeItem("user");
+    this.currentUserSource.next(null);
+    this.isLoggedInEvent.next(false);
+  }
 
 }
